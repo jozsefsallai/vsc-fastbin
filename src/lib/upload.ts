@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const upload = (apiUrl: string | undefined, contents: string): Promise<string> => {
+interface KeyAndSecret {
+  key: string;
+  secret?: string;
+}
+
+const upload = (apiUrl: string | undefined, contents: string): Promise<KeyAndSecret> => {
   return new Promise((resolve, reject) => {
     return axios.post(`${apiUrl}/documents`, contents, {
       headers: {
@@ -8,7 +13,7 @@ const upload = (apiUrl: string | undefined, contents: string): Promise<string> =
         'Content-Type': 'text/plain'  // eslint-disable-line
       }
     })
-      .then(({ data: { key } }) => resolve(key))
+      .then(({ data: { key, secret } }) => resolve({ key, secret }))
       .catch(err => {
         if (err.response?.data?.error) {
           return reject(err.response.data.error);

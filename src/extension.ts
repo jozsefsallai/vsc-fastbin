@@ -1,4 +1,4 @@
-import { window, commands, workspace, StatusBarAlignment, ExtensionContext, ProgressLocation } from 'vscode';
+import { window, commands, workspace, StatusBarAlignment, ExtensionContext } from 'vscode';
 import upload from './lib/upload';
 
 import * as clipboardy from 'clipboardy';
@@ -33,15 +33,19 @@ const activate = (context: ExtensionContext) => {
 		const contents = window.activeTextEditor.document.getText();
 
 		try {
-			const key = await upload(baseUrl, contents);
+			const { key, secret } = await upload(baseUrl, contents);
 			const keyWithExtension = getKeyWithExtension(key, window.activeTextEditor.document.languageId);
 
 			await clipboardy.write(`${baseUrl}/${keyWithExtension}`);
 
+			const buttons = [ 'Copy snippet URL', 'Copy raw URL' ];
+			if (secret) {
+				buttons.push('Copy delete URL');
+			}
+
 			window.showInformationMessage(
-				'Snippet uploaded successfully and URL copied to clipboad!',
-				'Copy snippet URL',
-				'Copy raw URL'
+				'Snippet uploaded successfully and URL copied to clipboard!',
+				...buttons
 			)
 				.then(async value => {
 					switch (value) {
@@ -50,6 +54,9 @@ const activate = (context: ExtensionContext) => {
 							break;
 						case 'Copy raw URL':
 							await clipboardy.write(`${baseUrl}/raw/${key}`);
+							break;
+						case 'Copy delete URL':
+							await clipboardy.write(`${baseUrl}/delete/${secret}`);
 							break;
 					}
 				});
